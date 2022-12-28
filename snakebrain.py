@@ -1,30 +1,19 @@
 import random
-height = 0
-Gboard = {}
-Gbody = {}
-Gfood = {}
-Gdata = {}
 def get_next_move(data):
-  global height
-  global Gboard
-  global Gbody
-  global Gfood
-  global Gdata
-  Gdata = data
-  Gbody = data["you"]["body"]
+  body = data["you"]["body"]
   width = data["board"]["width"]
   height = data["board"]["height"]
-  Gboard = data["board"]
-  Gfood = Gboard["food"]
-  coord = Gdata["you"]["head"]
-  moves = get_all_moves(coord)
+  board = data["board"]
+  food = board["food"]
+  head = data["you"]["head"]
+  moves = get_all_moves(head)
   safe_moves = []
   return_string_list = []
   for move in moves:
-    if avoid_walls(move, width, height) and avoid_self(Gbody, move) and avoid_others(data, move):
+    if avoid_walls(move, width, height) and avoid_self(body, move) and avoid_others(data, move):
       safe_moves.append(move)
   for move in safe_moves:
-    return_string_list.append(move_to_string(move, coord))
+    return_string_list.append(move_to_string(move, head))
   return return_string_list
 
 def get_all_moves(head):
@@ -60,14 +49,15 @@ def avoid_others(data, future_head):
       return False
     
   return True
-def shouldEat(move):
-  m = string_to_move(move, Gdata["you"]["head"])
-  for snake in Gboard["snakes"]:
+def shouldEat(data, move):
+  m = string_to_move(move, data["you"]["head"])
+  board = data["board"]
+  for snake in board["snakes"]:
     potential = get_all_moves(snake["head"])
-    if snake["id"] == Gdata["you"]["id"]:
+    if snake["id"] == data["you"]["id"]:
       continue
     if m in potential:
-      if Gdata["you"]["length"] <= snake["length"]:
+      if data["you"]["length"] <= snake["length"]:
         #print(move + " UNSAFE")
         return -2
       else:
@@ -78,24 +68,25 @@ def shouldEat(move):
 def prune_safe_moves(data, moves):
   body = data["you"]["body"]
   board = data["board"]
+  food = board["food"]
   random.shuffle(moves)
   safest = 0
   temp = 0
   safest_move = moves[0]
-  head = Gdata["you"]["head"]
+  head = data["you"]["head"]
   for move in moves:
-    temp = get_safe_squares(simulate_next_move(body, string_to_move(move, head)))
-    if isCorner(board, move):
+    temp = get_safe_squares(data, simulate_next_move(body, string_to_move(move, head)))
+    if isCorner(data, move):
       temp -= 1
-    temp += shouldEat(move)
-    if string_to_move(move, head) in Gfood and temp > 1:
+    temp += shouldEat(data, move)
+    if string_to_move(move, head) in food and temp > 1:
       temp += 2
     try:
-      if string_to_move(move, head) in Gboard["hazards"]:
+      if string_to_move(move, head) in board["hazards"]:
         temp -= 1
     except:
       pass
-    if Gdata["you"]["health"] < 30 and seekFood(string_to_move(move, Gdata["you"]["head"])) and temp > 1:
+    if data["you"]["health"] < 30 and seekFood(data, string_to_move(move, data["you"]["head"])) and temp > 1:
       temp += 2
     if temp > safest:
       safest = temp
@@ -112,8 +103,8 @@ def simulate_next_move(body, move):
   return sim_body
 
 
-def get_safe_squares(sim_body):
-    fake_data = Gdata
+def get_safe_squares(data, sim_body):
+    fake_data = data
     fake_data["you"]["body"] = sim_body[1:]
     fake_data["you"]["head"] = sim_body[0]
     return len(get_next_move(fake_data))
@@ -152,13 +143,14 @@ def prune_food(moves, food):
     return moves
   return rlist
 
-def isCorner(board, move):
-  m = string_to_move(move, Gdata["you"]["head"])
+def isCorner(data, move):
+  m = string_to_move(move, data["you"]["head"])
+  board = data["board"]
   return (m["x"] == 0 or m["x"] == board["width"]) and (m["y"] == 0 or m["y"] == board["height"]) 
 
-def seekFood(move):
-  foodList = Gdata["board"]["food"]
-  head = Gdata["you"]["head"]
+def seekFood(data, move):
+  foodList = data["board"]["food"]
+  head = data["you"]["head"]
   closestFoodDist = 99
   temp = 99
   closestFood = {}
