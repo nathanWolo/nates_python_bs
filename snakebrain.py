@@ -1,13 +1,10 @@
 import random
-
-width = 0
 height = 0
 Gboard = {}
 Gbody = {}
 Gfood = {}
 Gdata = {}
 def get_next_move(data):
-  global width
   global height
   global Gboard
   global Gbody
@@ -46,7 +43,7 @@ def avoid_walls(future_head, board_width, board_height):
 
 def avoid_self(body, future_head):
   segments = []
-  b = simulate_next_move(Gdata, future_head)
+  b = simulate_next_move(body, future_head)
   for segment in b[1:]:
     segments.append([int(segment["x"]), int(segment["y"])])
   head_x = int(future_head["x"])
@@ -71,14 +68,16 @@ def shouldEat(move):
       continue
     if m in potential:
       if Gdata["you"]["length"] <= snake["length"]:
-        print(move + " UNSAFE")
+        #print(move + " UNSAFE")
         return -2
       else:
         return 2
-  print(move + " safe")
+  #print(move + " safe")
   return 0
 
-def prune_safe_moves(body, moves):
+def prune_safe_moves(data, moves):
+  body = data["you"]["body"]
+  board = data["board"]
   random.shuffle(moves)
   safest = 0
   temp = 0
@@ -86,7 +85,7 @@ def prune_safe_moves(body, moves):
   head = Gdata["you"]["head"]
   for move in moves:
     temp = get_safe_squares(simulate_next_move(body, string_to_move(move, head)))
-    if isCorner(move):
+    if isCorner(board, move):
       temp -= 1
     temp += shouldEat(move)
     if string_to_move(move, head) in Gfood and temp > 1:
@@ -103,8 +102,8 @@ def prune_safe_moves(body, moves):
       safest_move = move
   return safest_move
 
-def simulate_next_move(data, move):
-  sim_body = Gbody
+def simulate_next_move(body, move):
+  sim_body = body
   #print("SIM BODY:", sim_body)
   for i in range(len(sim_body) - 1, 1, -1):
     sim_body[i] = sim_body[i - 1]
@@ -153,9 +152,9 @@ def prune_food(moves, food):
     return moves
   return rlist
 
-def isCorner(move):
+def isCorner(board, move):
   m = string_to_move(move, Gdata["you"]["head"])
-  return (m["x"] == 0 or m["x"] == width) and (m["y"] == 0 or m["y"] == height) 
+  return (m["x"] == 0 or m["x"] == board["width"]) and (m["y"] == 0 or m["y"] == board["height"]) 
 
 def seekFood(move):
   foodList = Gdata["board"]["food"]
@@ -174,3 +173,4 @@ def seekFood(move):
       return False
 def distFrom(c1, c2):
     return abs(c1["x"] - c2["x"]) + abs(c1["y"] - c2["y"])
+

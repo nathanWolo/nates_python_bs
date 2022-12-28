@@ -60,7 +60,7 @@ class Battlesnake(object):
         try:
           if dodge_food and len(safe_moves) > 1 and health > 10:
             safe_moves = snakebrain.prune_food(safe_moves, food)
-          move = snakebrain.prune_safe_moves(body, safe_moves)
+          move = snakebrain.prune_safe_moves(data, safe_moves)
           print('------PRUNING--------')
           print(move)
         except IndexError:
