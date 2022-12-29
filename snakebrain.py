@@ -120,11 +120,11 @@ def string_to_move(move, coord):
   else:
     return {'x': coord['x'] - 1, 'y': coord['y']}
 
-def prune_food(moves, food):
+def prune_food(data, moves, food):
   temp = {}
   rlist = []
   for move in moves:
-    temp = string_to_move(move, Gdata["you"]["head"])
+    temp = string_to_move(move, data["you"]["head"])
     if temp not in food:
       rlist.append(move)
   if(len(rlist) == 0):

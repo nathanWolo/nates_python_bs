@@ -43,7 +43,7 @@ class Battlesnake(object):
         # Valid moves are "up", "down", "left", or "right".
         # TODO: Use the information in cherrypy.request.json to decide your next move.
         data = cherrypy.request.json
-        dodge_food = False
+        dodge_food = False #set to false for competition play. set to true for survival challenges
         self.turn = data["turn"]
         self.game_id = data["game"]["id"]
         board = data["board"]
@@ -57,7 +57,7 @@ class Battlesnake(object):
         safe_moves = snakebrain.get_safe_moves(data, data["you"])
         print("safe moves", safe_moves)
         if dodge_food and len(safe_moves) > 1 and health > 10:
-          safe_moves = snakebrain.prune_food(safe_moves, food)
+          safe_moves = snakebrain.prune_food(data, safe_moves, food)
         move = snakebrain.prune_safe_moves(data, safe_moves)
         print('------PRUNING--------')
         print(move)
