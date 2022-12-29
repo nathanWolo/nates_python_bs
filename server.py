@@ -46,7 +46,6 @@ class Battlesnake(object):
         dodge_food = False
         self.turn = data["turn"]
         self.game_id = data["game"]["id"]
-        body = data["you"]["body"]
         board = data["board"]
         turn = data["turn"]
         board = data['board']
@@ -55,20 +54,19 @@ class Battlesnake(object):
         # Choose a random direction to move in
         possible_moves = ["up", "down", "left", "right"]
         move = random.choice(possible_moves)
-        safe_moves = snakebrain.get_next_move(data)
-        print(safe_moves)
-        try:
-          if dodge_food and len(safe_moves) > 1 and health > 10:
-            safe_moves = snakebrain.prune_food(safe_moves, food)
-          move = snakebrain.prune_safe_moves(data, safe_moves)
-          print('------PRUNING--------')
-          print(move)
-        except IndexError:
-          print("forced random")
-          random.shuffle(possible_moves)
-          for m in possible_moves:
-            if snakebrain.avoid_self(body, snakebrain.string_to_move(m, body[0])) and snakebrain.avoid_walls(snakebrain.string_to_move(m,body[0]), board["width"], board["height"]):
-              move = m
+        safe_moves = snakebrain.get_safe_moves(data, data["you"])
+        print("safe moves", safe_moves)
+        if dodge_food and len(safe_moves) > 1 and health > 10:
+          safe_moves = snakebrain.prune_food(safe_moves, food)
+        move = snakebrain.prune_safe_moves(data, safe_moves)
+        print('------PRUNING--------')
+        print(move)
+        # except IndexError:
+        #   print("forced random")
+        #   random.shuffle(possible_moves)
+        #   for m in possible_moves:
+        #     if snakebrain.avoid_self(body, snakebrain.string_to_move(m, body[0])) and snakebrain.avoid_walls(snakebrain.string_to_move(m,body[0]), board["width"], board["height"]):
+        #       move = m
         print(f"TURN: {turn}, MOVE: {move}")
         return {"move": move}
 
