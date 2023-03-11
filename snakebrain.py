@@ -84,12 +84,25 @@ def prune_safe_moves(data, moves):
     temp = 0
     safest_move = moves[0]
     head = data["you"]["head"]
+    # futures = get_possible_futures(data)
+    # print(len(futures))
     for move in moves:
         #check enclosure size
         temp = 0
+        for snake in board['snakes']:
+            temp += distFrom(string_to_move(move, data['you']['body'][0]),
+                             snake['body'][0]) / 5
         temp += score_enclosure(data, string_to_move(move, head)) / 5
-        #temp += get_safe_squares(
-        #data, simulate_next_move(body, string_to_move(move, head))) / 2
+        if len(board['snakes']) == 2:
+            our_index = 0
+            if board['snakes'][0]['id'] != data['you']['id']:
+                our_index = 1
+                other_index = our_index + 1 % 2
+                temp -= score_enclosure(
+                    simulate_next_move(
+                        data, our_index,
+                        string_to_move(move, data['you']['head'])),
+                    board['snakes'][other_index][0])
         temp += shouldEat(data, move)
         if string_to_move(move, head) in food and temp > 1:
             temp += 2
@@ -108,14 +121,13 @@ def prune_safe_moves(data, moves):
     return safest_move
 
 
-def simulate_next_move(body, move):
-    sim_body = body
-    #print("SIM BODY:", sim_body)
-    for i in range(len(sim_body) - 1, 1, -1):
-        sim_body[i] = sim_body[i - 1]
-    if len(sim_body) > 0:
-        sim_body[0] = move
-    return sim_body
+def simulate_next_move(data, snake_index: int, move):
+    '''take in a board state, move and snake. apply the move to the snake and return the new board state '''
+    new_data = copy.deepcopy(data)
+    new_data['board']['snakes'][snake_index]['body'].insert(0, move)
+    if move not in data["board"]["food"]:
+        new_data['board']['snakes'][snake_index]['body'].pop()
+    return new_data
 
 
 def get_safe_squares(data, sim_body):
@@ -234,15 +246,25 @@ def score_enclosure(data, move):
                 score -= 1
     return score
 
+
 # def get_possible_futures(data):
 #     '''return a list of all possible future boards'''
 #     futures = []
-#     for move in get_safe_moves(data, data["you"]):
-#         future = copy.deepcopy(data)
-#         future["you"]["body"] = simulate_next_move(data["you"]["body"],
-#                                                    string_to_move(move,
-#                                                                   data["you"]
-#                                                                   ["head"]))
-#         future["you"]["head"] = future["you"]["body"][0]
-#         futures.append(future)
+#     moves_per_snake = []
+#     num_futures = 1
+#     for snake_index in range(len(data['board']['snakes'])):
+#         moves_per_snake.append((snake_index, get_safe_moves(data, data['board']['snakes'][snake_index])))
+#         num_futures = num_futures * len(moves_per_snake[snake_index][1])
+#     for _ in range(num_futures):
+#         possible_future = copy.deepcopy(data)
+#         move_indices = list(0 for i in range(len(possible_future['board']['snakes'])))
+#         for snake_index in range(len(possible_future['board']['snakes'])):
+#             possible_future = simulate_next_move(possible_future, snake_index, moves_per_snake[snake_index][1][move_indices[snake_index]])
+#         for i in range(len(possible_future['board']['snakes'])):
+#             if move_indices[i] < len(moves_per_snake[i][1]) - 1:
+#                 move_indices[i] += 1
+#                 break
+#             elif move_indices[i] == len(moves_per_snake[i][1]) - 1:
+#                 move_indices[i] = 0
+#         futures.append(possible_future)
 #     return futures
