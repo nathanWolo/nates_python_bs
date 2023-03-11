@@ -74,8 +74,8 @@ def prune_safe_moves(data, moves):
         temp -= 1
     except:
       pass
-    if data["you"]["health"] < 30 and seekFood(data, string_to_move(move, data["you"]["head"])) and temp > 1:
-      temp += 2
+    if seekFood(data, string_to_move(move, data["you"]["head"])) and temp > 1:
+      temp += 0.5
     if temp > safest:
       safest = temp
       safest_move = move
