@@ -1,5 +1,7 @@
 import random
 
+import copy
+
 
 def get_all_moves(head):
 
@@ -75,7 +77,6 @@ def shouldEat(data, move):
 
 
 def prune_safe_moves(data, moves):
-    body = data["you"]["body"]
     board = data["board"]
     food = board["food"]
     random.shuffle(moves)
@@ -86,7 +87,7 @@ def prune_safe_moves(data, moves):
     for move in moves:
         #check enclosure size
         temp = 0
-        temp += score_enclosure(data, string_to_move(move, head)) / 10
+        temp += score_enclosure(data, string_to_move(move, head)) / 5
         #temp += get_safe_squares(
         #data, simulate_next_move(body, string_to_move(move, head))) / 2
         temp += shouldEat(data, move)
@@ -99,7 +100,7 @@ def prune_safe_moves(data, moves):
             pass
         if seekFood(data, string_to_move(move,
                                          data["you"]["head"])) and temp > 1:
-            temp += 0.5
+            temp += 1
         print('move: ', move, 'score: ', temp)
         if temp > safest:
             safest = temp
@@ -200,8 +201,10 @@ def get_neighbors(coord, data):
     board = data["board"]
     for move in ["up", "down", "left", "right"]:
         neighbor = string_to_move(move, coord)
-        if avoid_walls(neighbor, board["width"],
-                       board["height"]) and (avoid_snakes(data, neighbor) or get_lifetime_of_segment(data, neighbor) < 5) :
+        if avoid_walls(neighbor, board["width"], board["height"]) and (
+                avoid_snakes(data, neighbor) or get_lifetime_of_segment(
+                    data, neighbor) < distFrom(neighbor, data['you']['head'])
+        ) or (neighbor == data['you']['body'][-1]):
             neighbors.append(neighbor)
     return neighbors
 
@@ -223,4 +226,23 @@ def score_enclosure(data, move):
                 queue.append(neighbor)
     print('FLOOD FILL: move: ', move_to_string(move, data['you']['body'][0]),
           "score", len(seen_tiles))
-    return len(seen_tiles)
+    score = len(seen_tiles)
+    if data['you']['body'][-1] in seen_tiles:
+        score += len(data['you']['body'])
+        for tile in seen_tiles:
+            if tile in data['board']['food']:
+                score -= 1
+    return score
+
+# def get_possible_futures(data):
+#     '''return a list of all possible future boards'''
+#     futures = []
+#     for move in get_safe_moves(data, data["you"]):
+#         future = copy.deepcopy(data)
+#         future["you"]["body"] = simulate_next_move(data["you"]["body"],
+#                                                    string_to_move(move,
+#                                                                   data["you"]
+#                                                                   ["head"]))
+#         future["you"]["head"] = future["you"]["body"][0]
+#         futures.append(future)
+#     return futures
