@@ -97,12 +97,16 @@ def prune_safe_moves(data, moves):
             our_index = 0
             if board['snakes'][0]['id'] != data['you']['id']:
                 our_index = 1
-                other_index = our_index + 1 % 2
-                temp -= score_enclosure(
+                other_index = our_index + 1
+                other_index = other_index % 2
+                try:
+                  temp -= score_enclosure(
                     simulate_next_move(
                         data, our_index,
                         string_to_move(move, data['you']['head'])),
-                    board['snakes'][other_index][0])
+                    string_to_move(random.choice(get_safe_moves(data,board['snakes'][other_index])), board['snakes'][other_index]['body'][0])) / 10
+                except:
+                  pass
         temp += shouldEat(data, move)
         if string_to_move(move, head) in food and temp > 1:
             temp += 2
